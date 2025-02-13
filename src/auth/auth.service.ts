@@ -18,4 +18,19 @@ export class AuthService {
       return null;
     }
   }
+
+  async clearToken(token: string) {
+    try {
+      // 使token立即失效
+      const payload = this.jwtService.decode(token);
+      console.log(payload);
+      if (payload) {
+        // 重新签发一个立即过期的token
+        return this.jwtService.sign(payload, { expiresIn: 0 });
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
 }

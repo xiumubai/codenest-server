@@ -91,4 +91,20 @@ export class UserService {
     const { password: _, ...result } = user;
     return result;
   }
+
+  async logout(userId: number, token: string) {
+    // 验证token
+    const payload = await this.authService.verifyToken(token);
+
+    if (!payload) {
+      throw new UnauthorizedException('token无效');
+    }
+
+    // 清除token
+    await this.authService.clearToken(token);
+    return {
+      code: 200,
+      message: '退出登录成功',
+    };
+  }
 }

@@ -31,10 +31,17 @@ export class UserController {
     return this.userService.login(phone, password);
   }
 
+  // 退出登陆
+  @UseGuards(JwtGuard)
+  @Get('logout')
+  async logout(@Request() req) {
+    const token = req.headers.authorization?.split(' ')[1];
+    return this.userService.logout(req.user.id, token);
+  }
+
   @UseGuards(JwtGuard)
   @Get('info')
   async getUserInfo(@Request() req) {
-    console.log('req.user', req);
     return this.userService.getUserInfo(req.user.id);
   }
 }
