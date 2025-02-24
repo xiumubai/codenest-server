@@ -6,6 +6,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 设置全局路由前缀
+  app.setGlobalPrefix('api');
+
   // 启用 CORS
   app.enableCors({
     origin: ['http://localhost:3000', 'https://codenest.com'], // 允许所有来源
