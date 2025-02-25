@@ -65,4 +65,18 @@ export class UserController {
   ) {
     return this.userService.updateUserInfo(req.user.id, username, avatar);
   }
+
+  @UseGuards(JwtGuard)
+  @Put('change-password')
+  async changePassword(
+    @Request() req,
+    @Body('oldPassword') oldPassword: string,
+    @Body('newPassword') newPassword?: string,
+  ) {
+    return this.userService.changePassword(
+      req.user.id,
+      oldPassword,
+      newPassword,
+    );
+  }
 }
