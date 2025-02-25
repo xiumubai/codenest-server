@@ -23,7 +23,6 @@ export class AuthService {
     try {
       // 使token立即失效
       const payload = this.jwtService.decode(token);
-      console.log(payload);
       if (payload) {
         // 重新签发一个立即过期的token
         return this.jwtService.sign(payload, { expiresIn: 0 });

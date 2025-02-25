@@ -5,6 +5,8 @@ import {
   Body,
   UseGuards,
   Request,
+  Put,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from '../auth/jwt.guard';
@@ -36,12 +38,31 @@ export class UserController {
   @Get('logout')
   async logout(@Request() req) {
     const token = req.headers.authorization?.split(' ')[1];
-    return this.userService.logout(req.user.id, token);
+    return this.userService.logout(token);
   }
 
   @UseGuards(JwtGuard)
   @Get('info')
   async getUserInfo(@Request() req) {
     return this.userService.getUserInfo(req.user.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('check-username')
+  async checkUsernameUnique(
+    @Request() req,
+    @Query('username') username: string,
+  ) {
+    return this.userService.checkUsernameUnique(username, req.user.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @Put('update')
+  async updateUserInfo(
+    @Request() req,
+    @Body('username') username: string,
+    @Body('avatar') avatar?: string,
+  ) {
+    return this.userService.updateUserInfo(req.user.id, username, avatar);
   }
 }

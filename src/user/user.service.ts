@@ -43,9 +43,18 @@ export class UserService {
       },
     });
 
+    // 生成 token
+    const token = await this.authService.generateToken({
+      id: user.id,
+      phone: user.phone,
+    });
+
     // 返回用户信息（不包含密码）
     const { password: _, ...result } = user;
-    return result;
+    return {
+      user: result,
+      ...token,
+    };
   }
 
   async login(phone: string, password: string) {
@@ -92,18 +101,47 @@ export class UserService {
     return result;
   }
 
-  async logout(userId: number, token: string) {
-    // 验证token
-    const payload = await this.authService.verifyToken(token);
+  async checkUsernameUnique(username: string, userId?: number) {
+    console.log(username, userId);
+    // existingUser=true，昵称已经存在
+    // 如果提供了userId，则排除该用户自己当前的昵称
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        username,
+        ...(userId && { NOT: { id: userId } }),
+      },
+    });
+    return {
+      isUnique: !existingUser,
+    };
+  }
 
-    if (!payload) {
-      throw new UnauthorizedException('token无效');
+  async updateUserInfo(userId: number, username: string, avatar?: string) {
+    // 检查用户是否存在
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户不存在');
     }
 
-    // 清除token
+    // 更新用户信息
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        username,
+        ...(avatar && { avatar }),
+      },
+    });
+
+    const { password: _, ...result } = updatedUser;
+    return result;
+  }
+
+  async logout(token) {
     await this.authService.clearToken(token);
     return {
-      code: 200,
       message: '退出登录成功',
     };
   }

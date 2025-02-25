@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   // 全局注册异常过滤器
   app.useGlobalFilters(new HttpExceptionFilter());
+  // 配置请求体大小限制
+  app.use(express.json({ limit: '50mb' }));
 
   await app.listen(3001);
 }
