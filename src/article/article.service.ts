@@ -93,4 +93,25 @@ export class ArticleService {
       totalPages: Math.ceil(total / pageSize),
     };
   }
+
+  async getArticleDetail(id: number) {
+    const article = await this.prisma.article.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    if (!article) {
+      throw new Error('文章不存在');
+    }
+
+    return article;
+  }
 }

@@ -7,6 +7,7 @@ import {
   Put,
   Param,
   ParseIntPipe,
+  Get,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { JwtGuard } from '../auth/jwt.guard';
@@ -64,5 +65,10 @@ export class ArticleController {
       cover,
       tags,
     );
+  }
+
+  @Get(':id')
+  async getArticleDetail(@Param('id', ParseIntPipe) id: number) {
+    return this.articleService.getArticleDetail(id);
   }
 }
