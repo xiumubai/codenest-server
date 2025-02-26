@@ -21,4 +21,18 @@ model User {
   username  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  articles  Article[]
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String   @db.Text
+  description String
+  cover       String
+  tags        String    @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    Int
 }
