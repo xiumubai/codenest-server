@@ -8,6 +8,8 @@ import {
   Param,
   ParseIntPipe,
   Get,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { JwtGuard } from '../auth/jwt.guard';
@@ -131,5 +133,21 @@ export class ArticleController {
   @Get(':id')
   async getArticleDetail(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.getArticleDetail(id);
+  }
+
+  /**
+   * 获取草稿列表
+   * @param page 页码
+   * @param pageSize 每页数量
+   * @returns 返回草稿列表
+   */
+  @Get('drafts')
+  @UseGuards(JwtGuard)
+  async getDrafts(
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number,
+  ) {
+    return this.articleService.getDrafts(req.user.id, page, pageSize);
   }
 }

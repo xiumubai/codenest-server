@@ -250,4 +250,51 @@ export class ArticleService {
 
     return article;
   }
+
+  async getDrafts(authorId: number, page = 1, pageSize = 10) {
+    const skip = (page - 1) * pageSize;
+    const drafts = await this.prisma.article.findMany({
+      where: {
+        authorId,
+        isDraft: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        cover: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
+        originalArticle: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      skip,
+      take: pageSize,
+    });
+
+    const total = await this.prisma.article.count({
+      where: {
+        authorId,
+        isDraft: true,
+      },
+    });
+
+    return {
+      drafts,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    };
+  }
 }
