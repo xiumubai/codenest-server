@@ -25,6 +25,7 @@ export class ArticleController {
     @Body('description') description: string,
     @Body('cover') cover: string,
     @Body('tags') tags: string,
+    @Body('isDraft') isDraft = false,
   ) {
     return this.articleService.createArticle(
       req.user.id,
@@ -33,7 +34,36 @@ export class ArticleController {
       description,
       cover,
       tags,
+      isDraft,
     );
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('save-draft')
+  async saveDraft(
+    @Request() req,
+    @Body('title') title: string,
+    @Body('content') content: string,
+    @Body('description') description: string,
+    @Body('cover') cover: string,
+    @Body('tags') tags: string,
+    @Body('id', ParseIntPipe) id?: number,
+  ) {
+    return this.articleService.saveDraft(
+      req.user.id,
+      title,
+      content,
+      description,
+      cover,
+      tags,
+      id,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('publish-draft')
+  async publishDraft(@Request() req, @Body('id', ParseIntPipe) id: number) {
+    return this.articleService.publishDraft(req.user.id, id);
   }
 
   @Post('list')

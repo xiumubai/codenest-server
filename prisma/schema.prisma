@@ -22,6 +22,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   articles  Article[]
+  comments  Comment[]
+  likes     Like[]
 }
 
 model Article {
@@ -31,8 +33,43 @@ model Article {
   description String
   cover       String
   tags        String    @db.Text
+  isDraft     Boolean   @default(false)
+  publishedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  commentCount Int      @default(0)
   author      User     @relation(fields: [authorId], references: [id])
   authorId    Int
+  draftId     Int?     @unique
+  draft       Article?  @relation("ArticleDraft", fields: [draftId], references: [id])
+  originalArticle Article? @relation("ArticleDraft")
+  comments    Comment[]
+  likes       Like[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  article   Article  @relation(fields: [articleId], references: [id])
+  articleId Int
+  parentId  Int?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  article   Article  @relation(fields: [articleId], references: [id])
+  articleId Int
+
+  @@unique([userId, articleId])
 }
