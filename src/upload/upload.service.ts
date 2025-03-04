@@ -41,7 +41,9 @@ export class UploadService {
       if (result.statusCode === 200) {
         return {
           url: `https://${bucket}.cos.${region}.myqcloud.com/${fileName}`,
-          fileName,
+          filename: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size.toString(),
         };
       }
 
@@ -54,6 +56,7 @@ export class UploadService {
 
   async uploadFiles(files: Express.Multer.File[]) {
     const uploadPromises = files.map((file) => this.uploadFile(file));
-    return Promise.all(uploadPromises);
+    const results = await Promise.all(uploadPromises);
+    return { files: results };
   }
 }

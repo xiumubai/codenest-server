@@ -11,92 +11,123 @@ import {
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { JwtGuard } from '../auth/jwt.guard';
+import {
+  CreateArticleDto,
+  SaveDraftDto,
+  PublishDraftDto,
+  UpdateArticleDto,
+  GetArticleListDto,
+} from '../common/dto/article.dto';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
+  /**
+   * 创建文章
+   * @param req 请求对象，包含用户信息
+   * @param createArticleDto 创建文章的数据传输对象
+   * @returns 返回创建的文章信息
+   */
   @UseGuards(JwtGuard)
   @Post('create')
   async createArticle(
     @Request() req,
-    @Body('title') title: string,
-    @Body('content') content: string,
-    @Body('description') description: string,
-    @Body('cover') cover: string,
-    @Body('tags') tags: string,
-    @Body('isDraft') isDraft = false,
+    @Body() createArticleDto: CreateArticleDto,
   ) {
     return this.articleService.createArticle(
       req.user.id,
-      title,
-      content,
-      description,
-      cover,
-      tags,
-      isDraft,
+      createArticleDto.title,
+      createArticleDto.content,
+      createArticleDto.description,
+      createArticleDto.cover,
+      createArticleDto.tags,
+      createArticleDto.isDraft,
     );
   }
 
+  /**
+   * 保存文章草稿
+   * @param req 请求对象，包含用户信息
+   * @param saveDraftDto 保存草稿的数据传输对象
+   * @returns 返回保存的草稿信息
+   */
   @UseGuards(JwtGuard)
   @Post('save-draft')
-  async saveDraft(
-    @Request() req,
-    @Body('title') title: string,
-    @Body('content') content: string,
-    @Body('description') description: string,
-    @Body('cover') cover: string,
-    @Body('tags') tags: string,
-    @Body('id', ParseIntPipe) id?: number,
-  ) {
+  async saveDraft(@Request() req, @Body() saveDraftDto: SaveDraftDto) {
     return this.articleService.saveDraft(
       req.user.id,
-      title,
-      content,
-      description,
-      cover,
-      tags,
-      id,
+      saveDraftDto.title,
+      saveDraftDto.content,
+      saveDraftDto.description,
+      saveDraftDto.cover,
+      saveDraftDto.tags,
+      saveDraftDto.id,
     );
   }
 
+  /**
+   * 发布草稿为正式文章
+   * @param req 请求对象，包含用户信息
+   * @param publishDraftDto 发布草稿的数据传输对象
+   * @returns 返回发布后的文章信息
+   */
   @UseGuards(JwtGuard)
   @Post('publish-draft')
-  async publishDraft(@Request() req, @Body('id', ParseIntPipe) id: number) {
-    return this.articleService.publishDraft(req.user.id, id);
+  async publishDraft(@Request() req, @Body() publishDraftDto: PublishDraftDto) {
+    return this.articleService.publishDraft(
+      req.user.id,
+      publishDraftDto.id,
+      publishDraftDto.title,
+      publishDraftDto.content,
+      publishDraftDto.description,
+      publishDraftDto.cover,
+      publishDraftDto.tags,
+    );
   }
 
+  /**
+   * 获取文章列表
+   * @param getArticleListDto 获取文章列表的数据传输对象，包含分页和标签过滤信息
+   * @returns 返回分页后的文章列表数据
+   */
   @Post('list')
-  async getArticleList(
-    @Body('page', ParseIntPipe) page = 1,
-    @Body('pageSize', ParseIntPipe) pageSize = 10,
-    @Body('tags') tags?: string,
-  ) {
-    return this.articleService.getArticleList(page, pageSize, tags);
+  async getArticleList(@Body() getArticleListDto: GetArticleListDto) {
+    return this.articleService.getArticleList(
+      getArticleListDto.page,
+      getArticleListDto.pageSize,
+      getArticleListDto.tags,
+    );
   }
 
+  /**
+   * 更新文章信息
+   * @param req 请求对象，包含用户信息
+   * @param updateArticleDto 更新文章的数据传输对象
+   * @returns 返回更新后的文章信息
+   */
   @UseGuards(JwtGuard)
   @Put('update')
   async updateArticle(
     @Request() req,
-    @Body('id', ParseIntPipe) id: number,
-    @Body('title') title: string,
-    @Body('content') content: string,
-    @Body('description') description: string,
-    @Body('cover') cover: string,
-    @Body('tags') tags: string,
+    @Body() updateArticleDto: UpdateArticleDto,
   ) {
     return this.articleService.updateArticle(
-      id,
+      updateArticleDto.id,
       req.user.id,
-      title,
-      content,
-      description,
-      cover,
-      tags,
+      updateArticleDto.title,
+      updateArticleDto.content,
+      updateArticleDto.description,
+      updateArticleDto.cover,
+      updateArticleDto.tags,
     );
   }
 
+  /**
+   * 获取文章详情
+   * @param id 文章ID
+   * @returns 返回文章的详细信息
+   */
   @Get(':id')
   async getArticleDetail(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.getArticleDetail(id);

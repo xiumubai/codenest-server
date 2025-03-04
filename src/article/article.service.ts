@@ -12,7 +12,7 @@ export class ArticleService {
     description: string,
     cover: string,
     tags: string,
-    isDraft: boolean = false,
+    isDraft = false,
   ) {
     const article = await this.prisma.article.create({
       data: {
@@ -99,7 +99,15 @@ export class ArticleService {
     });
   }
 
-  async publishDraft(authorId: number, draftId: number) {
+  async publishDraft(
+    authorId: number,
+    draftId: number,
+    title?: string,
+    content?: string,
+    description?: string,
+    cover?: string,
+    tags?: string,
+  ) {
     const draft = await this.prisma.article.findUnique({
       where: { id: draftId },
       include: { originalArticle: true },
@@ -117,17 +125,22 @@ export class ArticleService {
       throw new Error('此文章不是草稿');
     }
 
+    // 使用提供的新内容或保持原有草稿内容
+    const publishData = {
+      title: title || draft.title,
+      content: content || draft.content,
+      description: description || draft.description,
+      cover: cover || draft.cover,
+      tags: tags || draft.tags,
+      publishedAt: new Date(),
+    };
+
     // 如果是已发布文章的草稿，更新原文章
     if (draft.originalArticle) {
       const updatedArticle = await this.prisma.article.update({
         where: { id: draft.originalArticle.id },
         data: {
-          title: draft.title,
-          content: draft.content,
-          description: draft.description,
-          cover: draft.cover,
-          tags: draft.tags,
-          publishedAt: new Date(),
+          ...publishData,
           draft: { disconnect: true },
         },
       });
@@ -144,8 +157,8 @@ export class ArticleService {
     return this.prisma.article.update({
       where: { id: draftId },
       data: {
+        ...publishData,
         isDraft: false,
-        publishedAt: new Date(),
       },
     });
   }

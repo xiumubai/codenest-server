@@ -39,3 +39,12 @@ $ npm run test:cov
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+
+## 操作命令
+
+### 1. migrate
+
+```bash
+npx prisma migrate dev --name add_comments_and_likes
+```
