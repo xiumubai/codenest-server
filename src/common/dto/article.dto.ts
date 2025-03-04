@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
+  IsNumber,
+} from 'class-validator';
 
 export class CreateArticleDto {
   @IsString()
@@ -13,8 +20,8 @@ export class CreateArticleDto {
   @IsString()
   cover: string;
 
-  @IsString()
-  tags: string;
+  @IsNumber()
+  tagId: number;
 
   @IsOptional()
   @IsBoolean()
@@ -48,8 +55,8 @@ export class PublishDraftDto {
   cover?: string;
 
   @IsOptional()
-  @IsString()
-  tags?: string;
+  @IsNumber()
+  tagId: number;
 }
 
 export class UpdateArticleDto extends CreateArticleDto {
@@ -69,6 +76,6 @@ export class GetArticleListDto {
   pageSize?: number = 10;
 
   @IsOptional()
-  @IsString()
-  tags?: string;
+  @IsNumber()
+  tagId: number;
 }

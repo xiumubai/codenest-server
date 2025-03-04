@@ -11,7 +11,7 @@ export class ArticleService {
     content: string,
     description: string,
     cover: string,
-    tags: string,
+    tagId: number,
     isDraft = false,
   ) {
     const article = await this.prisma.article.create({
@@ -20,7 +20,7 @@ export class ArticleService {
         content,
         description,
         cover,
-        tags,
+        tagId,
         authorId,
         isDraft,
         publishedAt: isDraft ? null : new Date(),
@@ -36,7 +36,7 @@ export class ArticleService {
     content: string,
     description: string,
     cover: string,
-    tags: string,
+    tagId: number,
     articleId?: number,
   ) {
     if (articleId) {
@@ -63,7 +63,7 @@ export class ArticleService {
             content,
             description,
             cover,
-            tags,
+            tagId,
           },
         });
       }
@@ -75,7 +75,7 @@ export class ArticleService {
           content,
           description,
           cover,
-          tags,
+          tagId,
           authorId,
           isDraft: true,
           originalArticle: {
@@ -92,7 +92,7 @@ export class ArticleService {
         content,
         description,
         cover,
-        tags,
+        tagId,
         authorId,
         isDraft: true,
       },
@@ -106,7 +106,7 @@ export class ArticleService {
     content?: string,
     description?: string,
     cover?: string,
-    tags?: string,
+    tagId?: number,
   ) {
     const draft = await this.prisma.article.findUnique({
       where: { id: draftId },
@@ -131,7 +131,7 @@ export class ArticleService {
       content: content || draft.content,
       description: description || draft.description,
       cover: cover || draft.cover,
-      tags: tags || draft.tags,
+      tag: tagId ? { connect: { id: tagId } } : undefined,
       publishedAt: new Date(),
     };
 
@@ -170,7 +170,7 @@ export class ArticleService {
     content: string,
     description: string,
     cover: string,
-    tags: string,
+    tagId: number,
   ) {
     // 验证文章是否存在且属于当前用户
     const existingArticle = await this.prisma.article.findUnique({
@@ -193,20 +193,21 @@ export class ArticleService {
         content,
         description,
         cover,
-        tags,
+        tag: { connect: { id: tagId } },
       },
     });
 
     return article;
   }
 
-  async getArticleList(page = 1, pageSize = 10, tags?: string) {
+  async getArticleList(page = 1, pageSize = 10, tagId?: number) {
     const skip = (page - 1) * pageSize;
 
     const [articles, total] = await Promise.all([
       this.prisma.article.findMany({
         skip,
         take: pageSize,
+        where: tagId ? { tagId } : {},
         orderBy: { createdAt: 'desc' },
         include: {
           author: {
@@ -216,6 +217,7 @@ export class ArticleService {
               avatar: true,
             },
           },
+          tag: true,
         },
       }),
       this.prisma.article.count(),
@@ -263,7 +265,7 @@ export class ArticleService {
         title: true,
         description: true,
         cover: true,
-        tags: true,
+        tagId: true,
         createdAt: true,
         updatedAt: true,
         originalArticle: {

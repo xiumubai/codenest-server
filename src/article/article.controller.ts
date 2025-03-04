@@ -43,7 +43,7 @@ export class ArticleController {
       createArticleDto.content,
       createArticleDto.description,
       createArticleDto.cover,
-      createArticleDto.tags,
+      createArticleDto.tagId,
       createArticleDto.isDraft,
     );
   }
@@ -63,7 +63,7 @@ export class ArticleController {
       saveDraftDto.content,
       saveDraftDto.description,
       saveDraftDto.cover,
-      saveDraftDto.tags,
+      saveDraftDto.tagId,
       saveDraftDto.id,
     );
   }
@@ -84,7 +84,7 @@ export class ArticleController {
       publishDraftDto.content,
       publishDraftDto.description,
       publishDraftDto.cover,
-      publishDraftDto.tags,
+      publishDraftDto.tagId,
     );
   }
 
@@ -98,7 +98,7 @@ export class ArticleController {
     return this.articleService.getArticleList(
       getArticleListDto.page,
       getArticleListDto.pageSize,
-      getArticleListDto.tags,
+      getArticleListDto.tagId,
     );
   }
 
@@ -121,7 +121,7 @@ export class ArticleController {
       updateArticleDto.content,
       updateArticleDto.description,
       updateArticleDto.cover,
-      updateArticleDto.tags,
+      updateArticleDto.tagId,
     );
   }
 
