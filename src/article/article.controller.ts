@@ -89,17 +89,50 @@ export class ArticleController {
   }
 
   /**
+   * 点赞或取消点赞文章
+   * @param req 请求对象，包含用户信息
+   * @param id 文章ID
+   * @returns 返回点赞状态和点赞数量
+   */
+  @UseGuards(JwtGuard)
+  @Post(':id/like')
+  async likeArticle(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    return this.articleService.likeArticle(req.user.id, id);
+  }
+
+  /**
    * 获取文章列表
    * @param getArticleListDto 获取文章列表的数据传输对象，包含分页和标签过滤信息
+   * @param req 请求对象，包含用户信息（可选）
    * @returns 返回分页后的文章列表数据
    */
   @Post('list')
-  async getArticleList(@Body() getArticleListDto: GetArticleListDto) {
+  async getArticleList(
+    @Body() getArticleListDto: GetArticleListDto,
+    @Request() req,
+  ) {
+    const userId = req.user?.id;
     return this.articleService.getArticleList(
       getArticleListDto.page,
       getArticleListDto.pageSize,
       getArticleListDto.tagId,
+      userId,
     );
+  }
+
+  /**
+   * 获取文章详情
+   * @param id 文章ID
+   * @param req 请求对象，包含用户信息（可选）
+   * @returns 返回文章的详细信息
+   */
+  @Get(':id')
+  async getArticleDetail(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    const userId = req.user?.id;
+    return this.articleService.getArticleDetail(id, userId);
   }
 
   /**
@@ -123,16 +156,6 @@ export class ArticleController {
       updateArticleDto.cover,
       updateArticleDto.tagId,
     );
-  }
-
-  /**
-   * 获取文章详情
-   * @param id 文章ID
-   * @returns 返回文章的详细信息
-   */
-  @Get(':id')
-  async getArticleDetail(@Param('id', ParseIntPipe) id: number) {
-    return this.articleService.getArticleDetail(id);
   }
 
   /**

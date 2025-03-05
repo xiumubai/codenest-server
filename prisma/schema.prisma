@@ -38,8 +38,8 @@ model Article {
   id          Int      @id @default(autoincrement())
   title       String
   content     String   @db.Text
-  description String
-  cover       String
+  description String?
+  cover       String?
   isDraft     Boolean   @default(false)
   publishedAt DateTime?
   createdAt   DateTime @default(now())
@@ -49,9 +49,6 @@ model Article {
   commentCount Int      @default(0)
   author      User     @relation(fields: [authorId], references: [id])
   authorId    Int
-  draftId     Int?     @unique
-  draft       Article?  @relation("ArticleDraft", fields: [draftId], references: [id])
-  originalArticle Article? @relation("ArticleDraft")
   comments    Comment[]
   likes       Like[]
   tag         Tag?     @relation(fields: [tagId], references: [id])

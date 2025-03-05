@@ -14,14 +14,17 @@ export class CreateArticleDto {
   @IsString()
   content: string;
 
+  @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
+  @IsOptional()
   @IsString()
-  cover: string;
+  cover?: string;
 
+  @IsOptional()
   @IsNumber()
-  tagId: number;
+  tagId?: number;
 
   @IsOptional()
   @IsBoolean()

@@ -34,16 +34,25 @@ export class ArticleService {
     authorId: number,
     title: string,
     content: string,
-    description: string,
-    cover: string,
-    tagId: number,
+    description?: string,
+    cover?: string,
+    tagId?: number,
     articleId?: number,
   ) {
+    const draftData = {
+      title,
+      content,
+      authorId,
+      isDraft: true,
+      description,
+      cover,
+      tagId,
+    };
+
     if (articleId) {
       // 检查文章是否存在且属于当前用户
       const existingArticle = await this.prisma.article.findUnique({
         where: { id: articleId },
-        include: { draft: true },
       });
 
       if (!existingArticle) {
@@ -54,54 +63,22 @@ export class ArticleService {
         throw new Error('没有权限修改此文章');
       }
 
-      // 如果已经有草稿，更新草稿
-      if (existingArticle.draft) {
-        return this.prisma.article.update({
-          where: { id: existingArticle.draft.id },
-          data: {
-            title,
-            content,
-            description,
-            cover,
-            tagId,
-          },
-        });
-      }
-
-      // 创建新的草稿
-      return this.prisma.article.create({
-        data: {
-          title,
-          content,
-          description,
-          cover,
-          tagId,
-          authorId,
-          isDraft: true,
-          originalArticle: {
-            connect: { id: articleId },
-          },
-        },
+      // 更新草稿
+      return this.prisma.article.update({
+        where: { id: articleId },
+        data: draftData,
       });
     }
 
-    // 创建新的草稿
+    // 创建新草稿
     return this.prisma.article.create({
-      data: {
-        title,
-        content,
-        description,
-        cover,
-        tagId,
-        authorId,
-        isDraft: true,
-      },
+      data: draftData,
     });
   }
 
   async publishDraft(
     authorId: number,
-    draftId: number,
+    articleId: number,
     title?: string,
     content?: string,
     description?: string,
@@ -109,8 +86,7 @@ export class ArticleService {
     tagId?: number,
   ) {
     const draft = await this.prisma.article.findUnique({
-      where: { id: draftId },
-      include: { originalArticle: true },
+      where: { id: articleId },
     });
 
     if (!draft) {
@@ -125,40 +101,17 @@ export class ArticleService {
       throw new Error('此文章不是草稿');
     }
 
-    // 使用提供的新内容或保持原有草稿内容
-    const publishData = {
-      title: title || draft.title,
-      content: content || draft.content,
-      description: description || draft.description,
-      cover: cover || draft.cover,
-      tag: tagId ? { connect: { id: tagId } } : undefined,
-      publishedAt: new Date(),
-    };
-
-    // 如果是已发布文章的草稿，更新原文章
-    if (draft.originalArticle) {
-      const updatedArticle = await this.prisma.article.update({
-        where: { id: draft.originalArticle.id },
-        data: {
-          ...publishData,
-          draft: { disconnect: true },
-        },
-      });
-
-      // 删除草稿
-      await this.prisma.article.delete({
-        where: { id: draftId },
-      });
-
-      return updatedArticle;
-    }
-
-    // 如果是新草稿，直接发布
+    // 更新文章内容并发布
     return this.prisma.article.update({
-      where: { id: draftId },
+      where: { id: articleId },
       data: {
-        ...publishData,
+        title: title || draft.title,
+        content: content || draft.content,
+        description: description || draft.description,
+        cover: cover || draft.cover,
+        tagId: tagId || draft.tagId,
         isDraft: false,
+        publishedAt: new Date(),
       },
     });
   }
@@ -200,14 +153,87 @@ export class ArticleService {
     return article;
   }
 
-  async getArticleList(page = 1, pageSize = 10, tagId?: number) {
+  async likeArticle(userId: number, articleId: number) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+      include: {
+        likes: {
+          where: { userId },
+        },
+      },
+    });
+
+    if (!article) {
+      throw new Error('文章不存在');
+    }
+
+    if (article.likes.length > 0) {
+      // 如果已经点赞，则取消点赞
+      await this.prisma.$transaction([
+        this.prisma.like.delete({
+          where: {
+            userId_articleId: {
+              userId,
+              articleId,
+            },
+          },
+        }),
+        this.prisma.article.update({
+          where: { id: articleId },
+          data: {
+            likeCount: {
+              decrement: 1,
+            },
+          },
+        }),
+      ]);
+
+      return {
+        liked: false,
+        likeCount: article.likeCount - 1,
+      };
+    } else {
+      // 如果未点赞，则添加点赞
+      await this.prisma.$transaction([
+        this.prisma.like.create({
+          data: {
+            userId,
+            articleId,
+          },
+        }),
+        this.prisma.article.update({
+          where: { id: articleId },
+          data: {
+            likeCount: {
+              increment: 1,
+            },
+          },
+        }),
+      ]);
+
+      return {
+        liked: true,
+        likeCount: article.likeCount + 1,
+      };
+    }
+  }
+
+  async getArticleList(
+    page = 1,
+    pageSize = 10,
+    tagId?: number,
+    userId?: number,
+  ) {
     const skip = (page - 1) * pageSize;
 
     const [articles, total] = await Promise.all([
       this.prisma.article.findMany({
         skip,
         take: pageSize,
-        where: tagId ? { tagId } : {},
+        where: {
+          isDraft: false,
+          tagId: tagId && tagId,
+        },
         orderBy: { createdAt: 'desc' },
         include: {
           author: {
@@ -218,13 +244,23 @@ export class ArticleService {
             },
           },
           tag: true,
+          likes: userId
+            ? {
+                where: { userId },
+                select: { userId: true },
+              }
+            : false,
         },
       }),
       this.prisma.article.count(),
     ]);
 
     return {
-      items: articles,
+      items: articles.map((article) => ({
+        ...article,
+        liked: article.likes ? article.likes.length > 0 : false,
+        likes: undefined,
+      })),
       total,
       page,
       pageSize,
@@ -232,7 +268,7 @@ export class ArticleService {
     };
   }
 
-  async getArticleDetail(id: number) {
+  async getArticleDetail(id: number, userId?: number) {
     const article = await this.prisma.article.findUnique({
       where: { id },
       include: {
@@ -243,6 +279,12 @@ export class ArticleService {
             avatar: true,
           },
         },
+        likes: userId
+          ? {
+              where: { userId },
+              select: { userId: true },
+            }
+          : false,
       },
     });
 
@@ -250,7 +292,11 @@ export class ArticleService {
       throw new Error('文章不存在');
     }
 
-    return article;
+    return {
+      ...article,
+      liked: article.likes ? article.likes.length > 0 : false,
+      likes: undefined,
+    };
   }
 
   async getDrafts(authorId: number, page = 1, pageSize = 10) {
@@ -268,12 +314,6 @@ export class ArticleService {
         tagId: true,
         createdAt: true,
         updatedAt: true,
-        originalArticle: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
       },
       orderBy: {
         updatedAt: 'desc',
