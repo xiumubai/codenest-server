@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { JwtGuard } from '../auth/jwt.guard';
+import { OptionalJwtGuard } from '../auth/optional-jwt.guard';
 import {
   CreateArticleDto,
   SaveDraftDto,
@@ -126,6 +127,7 @@ export class ArticleController {
    * @param req 请求对象，包含用户信息（可选）
    * @returns 返回文章的详细信息
    */
+  @UseGuards(OptionalJwtGuard)
   @Get(':id')
   async getArticleDetail(
     @Param('id', ParseIntPipe) id: number,

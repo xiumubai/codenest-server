@@ -279,6 +279,7 @@ export class ArticleService {
             avatar: true,
           },
         },
+        tag: true,
         likes: userId
           ? {
               where: { userId },
