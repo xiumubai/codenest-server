@@ -7,6 +7,7 @@ import { UploadModule } from './upload/upload.module';
 import { ArticleModule } from './article/article.module';
 import { SearchModule } from './search/search.module';
 import { TagModule } from './tag/tag.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TagModule } from './tag/tag.module';
     ArticleModule,
     SearchModule,
     TagModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
